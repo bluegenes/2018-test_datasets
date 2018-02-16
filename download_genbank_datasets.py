@@ -7,7 +7,7 @@ import requests
 import shutil
 
 # see README for genbank's "all" folder: https://ftp.ncbi.nih.gov/genomes/all/README.txt
-def download_genbank(name, genome_path, outF):
+def download_genbank(name, genome_path, outF, protein):
     genbank_url = 'https://ftp.ncbi.nih.gov/genomes/all'
     alpha,first,second,third = re.match("([A-Z]+)_(\d{3})(\d{3})(\d{3})", name).groups()
     folder_name = name.split('_genomic.fna.gz')[0]
@@ -15,15 +15,16 @@ def download_genbank(name, genome_path, outF):
     genome_url = os.path.join(genbank_path,name)
     print('genome: ' + genome_url)
     get_genbank_file(genome_url, outF)
-
-    protein_name = folder_name + '_protein.faa.gz'
-    protein_url = os.path.join(genbank_path,protein_name)
-    print('protein: ' + protein_url)
-    outP = outF.split('_genomic.fna.gz')[0] + '_protein.faa.gz'
-    get_genbank_file(protein_url, outP)
+    if protein:
+        protein_name = folder_name + '_protein.faa.gz'
+        protein_url = os.path.join(genbank_path,protein_name)
+        print('protein: ' + protein_url)
+        outP = outF.split('_genomic.fna.gz')[0] + '_protein.faa.gz'
+        get_genbank_file(protein_url, outP)
 
 
 def get_genbank_file(url, outFile):
+    # some protein files don't exist --> need to add a check to see if file exists
     r =requests.get(url, stream=True)
     with open(outFile, 'wb') as f:
         #with requests.get(url, stream=True) as r: # currently not working
@@ -42,7 +43,7 @@ def download_ipfs(genome_path, outF, ipfs_api, failed):
             pass
 
 
-def download_genomes(csv, outdir, ipfs=False, genbank=False):
+def download_genomes(csv, outdir, ipfs=False, genbank=False, protein=False):
     genomeInfo = pd.read_csv(csv)
     csv_name = args.csv.split('.')[0]#assuming good csv naming
     outD = os.path.join(outdir,csv_name)
@@ -58,7 +59,7 @@ def download_genomes(csv, outdir, ipfs=False, genbank=False):
             if ipfs:
                 download_ipfs(g, out, api, failed)
             elif genbank:
-                download_genbank(out_name, g, out)
+                download_genbank(out_name, g, out, protein)
 
 if __name__ == '__main__':
     """
@@ -68,5 +69,6 @@ if __name__ == '__main__':
     psr.add_argument('-o', '--outdir', default=os.getcwd())
     psr.add_argument('--ipfs', action='store_true')
     psr.add_argument('--genbank', action='store_true')
+    psr.add_argument('--protein', action='store_true')
     args = psr.parse_args()
-    download_genomes(args.csv, args.outdir, args.ipfs, args.genbank)
+    download_genomes(args.csv, args.outdir, args.ipfs, args.genbank, args.protein)
