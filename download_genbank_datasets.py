@@ -43,7 +43,7 @@ def get_genbank_file(url, outFile):
     r.close()
 
 def download_ipfs(genome_path, outF, ipfs_api, failed):
-    ipfs_url = "/ipfs/zDMZof1m4BD9VvDjPqguMrAoiY2gspmSAyyNLNYxNxRntLdXK3wj"
+    ipfs_url = "/ipns/genbank.oxli.org"
     url = os.path.join(ipfs_url, genome_path)
     print(url)
     with open(outF, 'wb') as f:
