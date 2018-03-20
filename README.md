@@ -5,4 +5,7 @@ Intended for downloading small testing datasets useful for assessing tool functi
 
 usage:
 
-python download_genbank_datasets.py --csv denticola.csv --genbank
+`python download_genbank_datasets.py --csv denticola.csv --genbank`
+
+
+If you'd like to download RNA or Protein files as well, add the `--rna` or `--protein` flags.
