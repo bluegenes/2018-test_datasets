@@ -76,7 +76,7 @@ if __name__ == '__main__':
     """
     """
     psr = argparse.ArgumentParser()
-    psr.add_argument('--csv')
+    psr.add_argument('csv')
     psr.add_argument('-o', '--outdir', default=os.getcwd())
     psr.add_argument('--ipfs', action='store_true')
     psr.add_argument('--genbank', action='store_true')
