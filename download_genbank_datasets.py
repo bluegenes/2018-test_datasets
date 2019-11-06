@@ -110,6 +110,6 @@ if __name__ == '__main__':
     psr.add_argument('--protein', action='store_true', help='also download protein files')
     psr.add_argument('--rna', action='store_true', help='also download rna_from_genomic files')
     psr.add_argument('--quiet', action='store_true', help='suppress stdout printing')
-    psr.add_argument('--folders', action='store_true', help='download genomic, rna, protein files to individual subfolders')
+    psr.add_argument('--subfolders', action='store_true', help='download genomic, rna, protein files to individual subfolders')
     args = psr.parse_args()
-    download_genomes(args.csv, args.outdir, args.ipfs, args.genbank, args.protein, args.rna, args.quiet, args.folders)
+    download_genomes(args.csv, args.outdir, args.ipfs, args.genbank, args.protein, args.rna, args.quiet, args.subfolders)
