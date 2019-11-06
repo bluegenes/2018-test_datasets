@@ -5,6 +5,7 @@ import argparse
 import ipfsapi
 import requests
 import shutil
+import ipfshttpclient
 
 # see README for genbank's "all" folder: https://ftp.ncbi.nih.gov/genomes/all/README.txt
 
