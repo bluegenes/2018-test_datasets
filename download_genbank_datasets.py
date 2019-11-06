@@ -1,15 +1,25 @@
 import pandas as pd
+import sys
 import os
 import re
 import argparse
-import ipfsapi
+#import ipfsapi
 import requests
 import shutil
 import ipfshttpclient
 
 # see README for genbank's "all" folder: https://ftp.ncbi.nih.gov/genomes/all/README.txt
 
-def download_genbank(name, genome_path, outF, protein, rna, quiet):
+def download_genbank(name, genome_path, outD, protein, rna, quiet, subfolders, failed):
+    if subfolders:
+        genomic_outD = os.path.join(outD, "genomic")
+        rna_outD = os.path.join(outD, "rna")
+        protein_outD = os.path.join(outD, "protein")
+    else:
+        genomic_outD = os.path.join(outD)
+        rna_outD = os.path.join(outD)
+        protein_outD = os.path.join(outD)
+
     genbank_url = 'https://ftp.ncbi.nih.gov/genomes/all'
     alpha,first,second,third = re.match("([A-Z]+)_(\d{3})(\d{3})(\d{3})", name).groups()
     folder_name = name.split('_genomic.fna.gz')[0]
@@ -17,15 +27,22 @@ def download_genbank(name, genome_path, outF, protein, rna, quiet):
     genome_url = os.path.join(genbank_path,name)
     if not quiet:
         print('genome: ' + genome_url)
-    get_genbank_file(genome_url, outF)
+
+    genomic_outF = os.path.join(genomic_outD, name)
+    if not os.path.exists(genomic_outD):
+        os.makedirs(genomic_outD, exist_ok=True)
+    get_genbank_file(genome_url, genomic_outF)
 
     if protein:
         protein_name = folder_name + '_protein.faa.gz'
         protein_url = os.path.join(genbank_path,protein_name)
         if not quiet:
             print('protein: ' + protein_url)
-        outP = outF.split('_genomic.fna.gz')[0] + '_protein.faa.gz'
-        get_genbank_file(protein_url, outP)
+        prot_name = name.split('_genomic.fna.gz')[0] + '_protein.faa.gz'
+        protein_outF = os.path.join(protein_outD, prot_name)
+        if not os.path.exists(protein_outD):
+            os.makedirs(protein_outD, exist_ok=True)
+        get_genbank_file(protein_url, protein_outF)
 
     if rna:
         rna_name = folder_name + '_rna_from_genomic.fna.gz'
@@ -33,9 +50,12 @@ def download_genbank(name, genome_path, outF, protein, rna, quiet):
         rna_url = os.path.join(genbank_path,rna_name)
         if not quiet:
             print('rna: ' + rna_url)
-        outR = outF.split('_genomic.fna.gz')[0] + '_rna_from_genomic.fna.gz'
+        rna_name = name.split('_genomic.fna.gz')[0] + '_rna_from_genomic.fna.gz'
+        rna_outF = os.path.join(rna_outD, rna_name)
+        if not os.path.exists(rna_outD):
+            os.makedirs(rna_outD, exist_ok=True)
         #outP = outF.split('_genomic.fna.gz')[0] + '_cds_from_genomic.fna.gz'
-        get_genbank_file(rna_url, outR)
+        get_genbank_file(rna_url, rna_outF)
 
 
 def get_genbank_file(url, outFile):
@@ -58,15 +78,18 @@ def download_ipfs(genome_path, outF, ipfs_api, failed):
             pass
 
 
-def download_genomes(csv, outdir, ipfs=False, genbank=False, protein=False, rna=False, quiet=False):
+def download_genomes(csv, outdir, ipfs=False, genbank=False, protein=False, rna=False, quiet=False, subfolders=False):
     genomeInfo = pd.read_csv(csv)
     csv_name = args.csv.split('.')[0]#assuming good csv naming
     outD = os.path.join(outdir,csv_name)
     failedF = os.path.join(outD, 'failed.txt')
-    os.makedirs(outD, exist_ok=True)
     genomes = genomeInfo.iloc[:,2]
+    if not os.path.exists(outD):
+        os.makedirs(outD, exist_ok=True)
     if ipfs:
-        api = ipfsapi.connect()
+        sys.stdout.write("please use genbank download with '--genbank'")
+        sys.exit(0)
+        #api = ipfsapi.connect()
     with open (failedF, 'w') as failed:
         for g in genomes:
             out_name = g.split('/')[-1]
@@ -74,7 +97,7 @@ def download_genomes(csv, outdir, ipfs=False, genbank=False, protein=False, rna=
             if ipfs:
                 download_ipfs(g, out, api, failed)
             elif genbank:
-                download_genbank(out_name, g, out, protein, rna, quiet)
+                download_genbank(out_name, g, outD, protein, rna, quiet, subfolders, failed)
 
 if __name__ == '__main__':
     """
@@ -87,5 +110,6 @@ if __name__ == '__main__':
     psr.add_argument('--protein', action='store_true', help='also download protein files')
     psr.add_argument('--rna', action='store_true', help='also download rna_from_genomic files')
     psr.add_argument('--quiet', action='store_true', help='suppress stdout printing')
+    psr.add_argument('--folders', action='store_true', help='download genomic, rna, protein files to individual subfolders')
     args = psr.parse_args()
-    download_genomes(args.csv, args.outdir, args.ipfs, args.genbank, args.protein, args.rna, args.quiet)
+    download_genomes(args.csv, args.outdir, args.ipfs, args.genbank, args.protein, args.rna, args.quiet, args.folders)
